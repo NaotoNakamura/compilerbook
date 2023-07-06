@@ -76,29 +76,23 @@ Token *new_token(TokenKind kind, Token *cur, char *str) {
 
 // 入力文字列pをトークナイズしてそれを返す
 Token *tokenize(char *p) {
-  // 連結リストの最初の要素
   Token head;
   head.next = NULL;
   Token *cur = &head;
 
   while (*p) {
-    // 空白文字をスキップ
     if (isspace(*p)) {
       p++;
       continue;
     }
 
     if (*p == '+' || *p == '-') {
-      // p++は後置インクリメントなので、引数に渡されるのはp
       cur = new_token(TK_RESERVED, cur, p++);
       continue;
     }
 
-    // 10という数字があった場合、*pは先頭アドレスへの参照になるので、1が入る
     if (isdigit(*p)) {
-      // pのように間接参照すると最初のループでは「1+2+3」が得られる（以降は「+2+3」...）
       cur = new_token(TK_NUM, cur, p);
-      // cur->valには1が、&pには「+2+3」が入る
       cur->val = strtol(p, &p, 10);
       continue;
     }
