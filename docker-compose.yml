@@ -9,3 +9,4 @@ services:
     stdin_open: true
     volumes:
       - .:/var/compilerbook
+    working_dir: /var/compilerbook
