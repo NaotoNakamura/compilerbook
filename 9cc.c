@@ -69,6 +69,8 @@ bool at_eof() {
 Token *new_token(TokenKind kind, Token *cur, char *str) {
   Token *tok = calloc(1, sizeof(Token));
   tok->kind = kind;
+  // 演算子が来たときは「+10」が入るが、consume内ではtoken->str[0]としているため
+  // +が取り出される
   tok->str = str;
   cur->next = tok;
   return tok;
