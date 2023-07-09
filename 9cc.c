@@ -20,8 +20,8 @@ typedef enum {
   ND_NUM, // 整数
 } NodeKind;
 
-typedef struct Node Node;
 typedef struct Token Token;
+typedef struct Node Node;
 
 // トークン型
 struct Token {
@@ -38,56 +38,18 @@ struct Node {
   int val;       // kindがND_NUMの場合のみ使う
 };
 
-// 生成規則は以下
-// expr = mul ("+" mul | "-" mul)*
-Node *expr() {
-  Node *node = mul();
-
-  for (;;) {
-    if (consume('+')) {
-      node = new_node(ND_ADD, node, mul());
-    } else if (consume('-')) {
-      node = new_node(ND_SUB, node, mul());
-    } else {
-      return node;
-    }
-  } 
-}
-
-// 生成規則は以下
-// mul = primary ("*" primary | "/" primary)*
-Node *mul() {
-  Node *node = primary();
-
-  for (;;) {
-    if (consume('*')) {
-      node = new_node(ND_MUL, node, primary());
-    } else if (consume('/')) {
-      node = new_node(ND_DIV, node, primary());
-    } else {
-      return node;
-    }
-  }
-}
-
-// 生成規則は以下
-// primary = "(" expr ")" | num
-Node *primary() {
-  // 次のトークンが"("なら、"(" expr ")"のはず
-  if (consume('(')) {
-    Node *node = expr();
-    expect(')');
-    return node;
-  }
-
-  // そうでなければ数値のはず
-  return new_node_num(expect_number());
-}
-
 // 現在着目しているトークン
 Token *token;
 
 char *user_input;
+
+void error(char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+  exit(1);
+}
 
 void error_at(char *loc, char *fmt, ...) {
   va_list ap;
@@ -175,17 +137,72 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    if (*p == '*' || *p == '/') {
+      cur = new_token(TK_RESERVED, cur, p++);
+      continue;
+    }
+
     if (isdigit(*p)) {
       cur = new_token(TK_NUM, cur, p);
       cur->val = strtol(p, &p, 10);
       continue;
     }
 
-    error("トークナイズできません");
+    error_at(p, "トークナイズできません");
   }
 
   new_token(TK_EOF, cur, p);
   return head.next;
+}
+
+Node *expr();
+Node *mul();
+Node *primary();
+
+// 生成規則は以下
+// expr = mul ("+" mul | "-" mul)*
+Node *expr() {
+  Node *node = mul();
+
+  for (;;) {
+    if (consume('+')) {
+      node = new_node(ND_ADD, node, mul());
+    } else if (consume('-')) {
+      node = new_node(ND_SUB, node, mul());
+    } else {
+      return node;
+    }
+  } 
+}
+
+// 生成規則は以下
+// mul = primary ("*" primary | "/" primary)*
+Node *mul() {
+  Node *node = primary();
+
+  for (;;) {
+    if (consume('*')) {
+      node = new_node(ND_MUL, node, primary());
+    } else if (consume('/')) {
+      node = new_node(ND_DIV, node, primary());
+    } else {
+      return node;
+    }
+  }
+}
+
+// 生成規則は以下
+// primary = "(" expr ")" | num
+Node *primary() {
+  // 次のトークンが"("なら、"(" expr ")"のはず
+  if (consume('(')) {
+    Node *node = expr();
+    expect(')');
+    return node;
+  }
+
+  // そうでなければ数値のはず
+  return new_node_num(expect_number());
 }
 
 void gen(Node *node) {
@@ -227,21 +244,17 @@ int main(int argc, char **argv) {
 
   user_input = argv[1];
   token = tokenize(user_input);
+  Node *node = expr();
 
   printf(".intel_syntax noprefix\n");
   printf(".globl main\n");
   printf("main:\n");
-  printf("  mov rax, %d\n", expect_number());
 
-  while (!at_eof()) {
-    if (consume('+')) {
-      printf("  add rax, %d\n", expect_number());
-      continue;
-    }
+  gen(node);
 
-    expect('-');
-    printf("  sub rax, %d\n", expect_number());
-  }
+  // スタックトップに式全体の値が残っているはずなので
+  // それをRAXにロードして関数からの返り値とする
+  printf("  pop rax\n");
   printf("  ret\n");
   return 0;
 }
