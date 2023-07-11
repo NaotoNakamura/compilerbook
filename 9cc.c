@@ -155,8 +155,7 @@ Node *mul();
 Node *unary();
 Node *primary();
 
-// 生成規則は以下
-// expr = mul ("+" mul | "-" mul)*
+// 生成規則: expr = mul ("+" mul | "-" mul)*
 Node *expr() {
   Node *node = mul();
 
@@ -171,8 +170,7 @@ Node *expr() {
   } 
 }
 
-// 生成規則は以下
-// mul = unary ("*" unary | "/" unary)*
+// 生成規則: mul = unary ("*" unary | "/" unary)*
 Node *mul() {
   Node *node = unary();
 
@@ -187,8 +185,8 @@ Node *mul() {
   }
 }
 
-// 生成規則は以下（X?はXが0回か1回出現する要素を表す）
-// unary   = ("+" | "-")? primary
+// 生成規則: unary = ("+" | "-")? primary
+// （X?はXが0回か1回出現する要素を表す）
 Node *unary() {
   if (consume('+'))
     return primary();
@@ -197,8 +195,7 @@ Node *unary() {
   return primary();
 }
 
-// 生成規則は以下
-// primary = "(" expr ")" | num
+// 生成規則: primary = "(" expr ")" | num
 Node *primary() {
   // 次のトークンが"("なら、"(" expr ")"のはず
   if (consume('(')) {
