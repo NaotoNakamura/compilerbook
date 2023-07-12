@@ -71,18 +71,24 @@ void error_at(char *loc, char *fmt, ...) {
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
-bool consume(char op) {
-  if (token->kind != TK_RESERVED || token->str[0] != op)
+bool consume(char *op) {
+  if (token->kind != TK_RESERVED ||
+      strlen(op) != token->len ||
+      memcmp(token->str, op, token->len)) {
     return false;
+  }
   token = token->next;
   return true;
 }
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
-void expect(char op) {
-  if (token->kind != TK_RESERVED || token->str[0] != op)
+void expect(char *op) {
+  if (token->kind != TK_RESERVED ||
+      strlen(op) != token->len ||
+      memcmp(token->str, op, token->len)) {
     error_at(token->str, "トークンではありません");
+  }
   token = token->next;
 }
 
@@ -166,14 +172,14 @@ Node *expr() {
   Node *node = mul();
 
   for (;;) {
-    if (consume('+')) {
+    if (consume("+")) {
       node = new_node(ND_ADD, node, mul());
-    } else if (consume('-')) {
+    } else if (consume("-")) {
       node = new_node(ND_SUB, node, mul());
     } else {
       return node;
     }
-  } 
+  }
 }
 
 // 生成規則: mul = unary ("*" unary | "/" unary)*
@@ -181,9 +187,9 @@ Node *mul() {
   Node *node = unary();
 
   for (;;) {
-    if (consume('*')) {
+    if (consume("*")) {
       node = new_node(ND_MUL, node, primary());
-    } else if (consume('/')) {
+    } else if (consume("/")) {
       node = new_node(ND_DIV, node, primary());
     } else {
       return node;
@@ -194,9 +200,9 @@ Node *mul() {
 // 生成規則: unary = ("+" | "-")? primary
 // （X?はXが0回か1回出現する要素を表す）
 Node *unary() {
-  if (consume('+'))
+  if (consume("+"))
     return primary();
-  if (consume('-'))
+  if (consume("-"))
     return new_node(ND_SUB, new_node_num(0), primary());
   return primary();
 }
@@ -204,9 +210,9 @@ Node *unary() {
 // 生成規則: primary = "(" expr ")" | num
 Node *primary() {
   // 次のトークンが"("なら、"(" expr ")"のはず
-  if (consume('(')) {
+  if (consume("(")) {
     Node *node = expr();
-    expect(')');
+    expect(")");
     return node;
   }
 
