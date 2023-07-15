@@ -198,12 +198,13 @@ Node *equality() {
   Node *node = relational();
 
   for (;;) {
-    if (consume("=="))
+    if (consume("==")) {
       node = new_node(ND_EQ, node, relational());
-    else if (consume("!="))
+    } else if (consume("!=")) {
       node = new_node(ND_NE, node, relational());
-    else
+    } else {
       return node;
+    }
   }
 }
 
@@ -212,16 +213,17 @@ Node *relational() {
   Node *node = add();
 
   for (;;) {
-    if (consume("<"))
+    if (consume("<")) {
       node = new_node(ND_LT, node, add());
-    else if (consume("<="))
+    } else if (consume("<=")) {
       node = new_node(ND_LE, node, add());
-    else if (consume(">"))
+    } else if (consume(">")) {
       node = new_node(ND_LT, add(), node);
-    else if (consume(">="))
+    } else if (consume(">=")) {
       node = new_node(ND_LE, add(), node);
-    else
+    } else {
       return node;
+    }
   }
 }
 
@@ -258,10 +260,12 @@ Node *mul() {
 // 生成規則: unary = ("+" | "-")? unary
 // （X?はXが0回か1回出現する要素を表す）
 Node *unary() {
-  if (consume("+"))
+  if (consume("+")) {
     return unary();
-  if (consume("-"))
+  }
+  if (consume("-")) {
     return new_node(ND_SUB, new_node_num(0), unary());
+  }
   return primary();
 }
 
@@ -273,7 +277,6 @@ Node *primary() {
     expect(")");
     return node;
   }
-
   // そうでなければ数値のはず
   return new_node_num(expect_number());
 }
