@@ -246,22 +246,22 @@ Node *mul() {
 
   for (;;) {
     if (consume("*")) {
-      node = new_node(ND_MUL, node, primary());
+      node = new_node(ND_MUL, node, unary());
     } else if (consume("/")) {
-      node = new_node(ND_DIV, node, primary());
+      node = new_node(ND_DIV, node, unary());
     } else {
       return node;
     }
   }
 }
 
-// 生成規則: unary = ("+" | "-")? primary
+// 生成規則: unary = ("+" | "-")? unary
 // （X?はXが0回か1回出現する要素を表す）
 Node *unary() {
   if (consume("+"))
-    return primary();
+    return unary();
   if (consume("-"))
-    return new_node(ND_SUB, new_node_num(0), primary());
+    return new_node(ND_SUB, new_node_num(0), unary());
   return primary();
 }
 
