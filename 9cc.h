@@ -8,6 +8,7 @@
 // トークンの種類
 typedef enum {
   TK_RESERVED, // 記号
+  TK_IDENT,    // 識別子
   TK_NUM,      // 整数トークン
   TK_EOF,      // 入力の終わりを表すトークン
 } TokenKind;
@@ -18,10 +19,12 @@ typedef enum {
   ND_MUL, // *
   ND_DIV, // /
   ND_NUM, // 整数
-  ND_EQ,  // ==
-  ND_NE,  // !=
-  ND_LT,  // <
-  ND_LE,  // <=
+  ND_EQ, // ==
+  ND_NE, // !=
+  ND_LT, // <
+  ND_LE, // <=
+  ND_ASSIGN, // =
+  ND_LVAR, // ローカル変数
 } NodeKind;
 
 typedef struct Token Token;
@@ -41,6 +44,7 @@ struct Node {
   Node *lhs;     // 左辺
   Node *rhs;     // 右辺
   int val;       // kindがND_NUMの場合のみ使う
+  int offset;    // kindがND_LVARの場合のみ使う
 };
 
 extern Token *token;
@@ -61,11 +65,21 @@ Token *tokenize(char *p);
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 
+extern Node *code[100];
+
+Token *consume_ident();
+
+void program();
+Node *stmt();
 Node *expr();
+Node *assign();
 Node *equality();
 Node *relational();
 Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
+void gen(Node *node);
+
+void gen_lval(Node *node);
 void gen(Node *node);

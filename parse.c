@@ -22,7 +22,7 @@ void expect(char *op) {
   if (token->kind != TK_RESERVED ||
       strlen(op) != token->len ||
       memcmp(token->str, op, token->len)) {
-    error_at(token->str, "トークンではありません");
+    error_at(token->str, "\"%s\"ではありません", op);
   }
   token = token->next;
 }
@@ -69,6 +69,11 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    if ('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p++, 1);
+      continue;
+    }
+
     // 複数記号で構成されているかを判定
     if (startswith(p, "==") || startswith(p, "!=") ||
         startswith(p, "<=") || startswith(p, ">=")) {
@@ -80,7 +85,8 @@ Token *tokenize(char *p) {
     if (*p == '+' || *p == '-' ||
         *p == '*' || *p == '/' ||
         *p == '(' || *p == ')' ||
-        *p == '<' || *p == '>') {
+        *p == '<' || *p == '>' ||
+        *p == '=' || *p == ';') {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
     }
