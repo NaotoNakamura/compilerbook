@@ -1,5 +1,9 @@
 #include "9cc.h"
 
+bool at_eof() {
+  return token->kind == TK_EOF;
+}
+
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = kind;
@@ -27,9 +31,47 @@ bool consume(char *op) {
   return true;
 }
 
-// 生成規則: expr = equality
+// トークンが識別子であればそのトークンを返し、トークンを1つ進める
+Token *consume_ident() {
+  if (token->kind != TK_IDENT) {
+    return NULL;
+  }
+  Token *current_token = token;
+  token = token->next;
+  return current_token;
+}
+
+Node *code[100];
+
+// 生成規則: program = stmt*
+void program() {
+  int i = 0;
+  while (!at_eof()) {
+    // stmtは「;」の手前までを構文木にして返すので、codeの配列に各構文木を入れる
+    code[i++] = stmt();
+  }
+  code[i] = NULL;
+}
+
+// 生成規則: stmt = expr ";"
+Node *stmt() {
+  Node *node = expr();
+  expect(";");
+  return node;
+}
+
+// 生成規則: expr = assign
 Node *expr() {
-  return equality();
+  return assign();
+}
+
+// 生成規則: assign = equality ("=" assign)?
+Node *assign() {
+  Node *node = equality();
+  if (consume("=")) {
+    node = new_node(ND_ASSIGN, node, assign());
+  }
+  return node;
 }
 
 // 生成規則: equality = relational ("==" relational | "!=" relational)*
@@ -116,13 +158,52 @@ Node *primary() {
     expect(")");
     return node;
   }
+  Token *tok = consume_ident();
+  if (tok) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LVAR;
+    // tok->str[0]が「b」なら('b'-'a'+1)が2になり、結果16になる
+    // 現在の関数フレームの開始位置をもとに変数のアドレスを特定するため
+    node->offset = (tok->str[0] - 'a' + 1) * 8;
+    return node;
+  }
   // そうでなければ数値のはず
   return new_node_num(expect_number());
 }
 
+// 指定された変数のアドレスをスタックにpush（rbpからのオフセットで求められる）
+void gen_lval(Node *node) {
+  if (node->kind != ND_LVAR) {
+    error_at(token->str, "代入の左辺値が変数ではありません");
+  }
+
+  // rbp（現在の関数の開始位置を表す）の値をraxに入れる
+  printf("  mov rax, rbp\n");
+  // raxの値をオフセット分だけ引いて、変数のアドレスをraxに入れる
+  printf("  sub rax, %d\n", node->offset);
+  // 特定したアドレスをスタックにpush
+  printf("  push rax\n");
+}
+
 void gen(Node *node) {
-  if (node->kind == ND_NUM) {
+  switch (node->kind) {
+  case ND_NUM:
     printf("  push %d\n", node->val);
+    return;
+  case ND_LVAR:
+    gen_lval(node);
+    printf("  pop rax\n");
+    printf("  mov rax, [rax]\n");
+    printf("  push rax\n");
+    return;
+  case ND_ASSIGN:
+    gen_lval(node->lhs);
+    gen(node->rhs);
+
+    printf("  pop rdi\n");
+    printf("  pop rax\n");
+    printf("  mov [rax], rdi\n");
+    printf("  push rdi\n");
     return;
   }
 
