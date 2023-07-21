@@ -1,5 +1,8 @@
 #include "9cc.h"
 
+// ローカル変数
+LVar *locals;
+
 bool at_eof() {
   return token->kind == TK_EOF;
 }
@@ -39,6 +42,16 @@ Token *consume_ident() {
   Token *current_token = token;
   token = token->next;
   return current_token;
+}
+
+// 変数を名前で検索する。見つからなかった場合はNULLを返す。
+LVar *find_lvar(Token *tok) {
+  for (LVar *var = locals; var; var = var->next) {
+    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) {
+      return var;
+    }
+  }
+  return NULL;
 }
 
 Node *code[100];
@@ -158,15 +171,33 @@ Node *primary() {
     expect(")");
     return node;
   }
+
+  // トークンが識別子かどうか
   Token *tok = consume_ident();
   if (tok) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
-    // tok->str[0]が「b」なら('b'-'a'+1)が2になり、結果16になる
-    // 現在の関数フレームの開始位置をもとに変数のアドレスを特定するため
-    node->offset = (tok->str[0] - 'a' + 1) * 8;
+
+    LVar *lvar = find_lvar(tok);
+    if (lvar) {
+      node->offset = lvar->offset;
+    } else {
+      // ローカル変数が初めて見つかったものだった場合
+      lvar = calloc(1, sizeof(LVar));
+      lvar->next = locals;
+      lvar->name = tok->str;
+      lvar->len = tok->len;
+      if (locals == NULL) {
+        lvar->offset = 8;
+      } else {
+        lvar->offset = locals->offset + 8;
+      }
+      node->offset = lvar->offset;
+      locals = lvar;
+    }
     return node;
   }
+
   // そうでなければ数値のはず
   return new_node_num(expect_number());
 }
