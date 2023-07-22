@@ -14,17 +14,17 @@ typedef enum {
 } TokenKind;
 
 typedef enum {
-  ND_ADD, // +
-  ND_SUB, // -
-  ND_MUL, // *
-  ND_DIV, // /
-  ND_NUM, // 整数
-  ND_EQ, // ==
-  ND_NE, // !=
-  ND_LT, // <
-  ND_LE, // <=
+  ND_ADD,    // +
+  ND_SUB,    // -
+  ND_MUL,    // *
+  ND_DIV,    // /
+  ND_NUM,    // 整数
+  ND_EQ,     // ==
+  ND_NE,     // !=
+  ND_LT,     // <
+  ND_LE,     // <=
   ND_ASSIGN, // =
-  ND_LVAR, // ローカル変数
+  ND_LVAR,   // ローカル変数
 } NodeKind;
 
 typedef struct Token Token;
