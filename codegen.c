@@ -24,8 +24,8 @@ Node *new_node_num(int val) {
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
-bool consume(char *op) {
-  if (token->kind != TK_RESERVED ||
+bool consume(char *op, TokenKind tk_kind) {
+  if (token->kind != tk_kind ||
       strlen(op) != token->len ||
       memcmp(token->str, op, token->len)) {
     return false;
@@ -42,18 +42,6 @@ Token *consume_ident() {
   Token *current_token = token;
   token = token->next;
   return current_token;
-}
-
-// トークンがreturnのときには、トークンを1つ読み進めて真を返す。
-// それ以外の場合には偽を返す。
-bool consume_return(char *op) {
-  if (token->kind != TK_RETURN ||
-      strlen(op) != token->len ||
-      memcmp(token->str, op, token->len)) {
-    return false;
-  }
-  token = token->next;
-  return true;
 }
 
 // 変数を名前で検索する。見つからなかった場合はNULLを返す。
@@ -81,7 +69,7 @@ void program() {
 // 生成規則: stmt = expr ";" | "return" expr ";"
 Node *stmt() {
   Node *node;
-  if (consume_return("return")) {
+  if (consume("return", TK_RETURN)) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
@@ -100,7 +88,7 @@ Node *expr() {
 // 生成規則: assign = equality ("=" assign)?
 Node *assign() {
   Node *node = equality();
-  if (consume("=")) {
+  if (consume("=", TK_RESERVED)) {
     node = new_node(ND_ASSIGN, node, assign());
   }
   return node;
@@ -111,9 +99,9 @@ Node *equality() {
   Node *node = relational();
 
   for (;;) {
-    if (consume("==")) {
+    if (consume("==", TK_RESERVED)) {
       node = new_node(ND_EQ, node, relational());
-    } else if (consume("!=")) {
+    } else if (consume("!=", TK_RESERVED)) {
       node = new_node(ND_NE, node, relational());
     } else {
       return node;
@@ -126,13 +114,13 @@ Node *relational() {
   Node *node = add();
 
   for (;;) {
-    if (consume("<")) {
+    if (consume("<", TK_RESERVED)) {
       node = new_node(ND_LT, node, add());
-    } else if (consume("<=")) {
+    } else if (consume("<=", TK_RESERVED)) {
       node = new_node(ND_LE, node, add());
-    } else if (consume(">")) {
+    } else if (consume(">", TK_RESERVED)) {
       node = new_node(ND_LT, add(), node);
-    } else if (consume(">=")) {
+    } else if (consume(">=", TK_RESERVED)) {
       node = new_node(ND_LE, add(), node);
     } else {
       return node;
@@ -145,9 +133,9 @@ Node *add() {
   Node *node = mul();
 
   for (;;) {
-    if (consume("+")) {
+    if (consume("+", TK_RESERVED)) {
       node = new_node(ND_ADD, node, mul());
-    } else if (consume("-")) {
+    } else if (consume("-", TK_RESERVED)) {
       node = new_node(ND_SUB, node, mul());
     } else {
       return node;
@@ -160,9 +148,9 @@ Node *mul() {
   Node *node = unary();
 
   for (;;) {
-    if (consume("*")) {
+    if (consume("*", TK_RESERVED)) {
       node = new_node(ND_MUL, node, unary());
-    } else if (consume("/")) {
+    } else if (consume("/", TK_RESERVED)) {
       node = new_node(ND_DIV, node, unary());
     } else {
       return node;
@@ -173,10 +161,10 @@ Node *mul() {
 // 生成規則: unary = ("+" | "-")? unary
 // （X?はXが0回か1回出現する要素を表す）
 Node *unary() {
-  if (consume("+")) {
+  if (consume("+", TK_RESERVED)) {
     return unary();
   }
-  if (consume("-")) {
+  if (consume("-", TK_RESERVED)) {
     return new_node(ND_SUB, new_node_num(0), unary());
   }
   return primary();
@@ -185,7 +173,7 @@ Node *unary() {
 // 生成規則: primary = "(" expr ")" | num
 Node *primary() {
   // 次のトークンが"("なら、"(" expr ")"のはず
-  if (consume("(")) {
+  if (consume("(", TK_RESERVED)) {
     Node *node = expr();
     expect(")");
     return node;

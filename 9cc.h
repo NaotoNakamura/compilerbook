@@ -63,7 +63,7 @@ extern Token *token;
 extern char *user_input;
 
 void error_at(char *loc, char *fmt, ...);
-bool consume(char *op);
+bool consume(char *op, TokenKind tk_kind);
 void expect(char *op);
 int expect_number();
 bool at_eof();
