@@ -65,6 +65,12 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    if (strncmp(p, "return", 6) == 0 && isspace(p[6])) {
+      cur = new_token(TK_RETURN, cur, p, 6);
+      p += 6;
+      continue;
+    }
+
     if ('a' <= *p && *p <= 'z') {
       char *c = p;
       while ('a' <= *p && *p <= 'z') p++;

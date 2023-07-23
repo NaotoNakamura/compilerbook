@@ -44,6 +44,18 @@ Token *consume_ident() {
   return current_token;
 }
 
+// トークンがreturnのときには、トークンを1つ読み進めて真を返す。
+// それ以外の場合には偽を返す。
+bool consume_return(char *op) {
+  if (token->kind != TK_RETURN ||
+      strlen(op) != token->len ||
+      memcmp(token->str, op, token->len)) {
+    return false;
+  }
+  token = token->next;
+  return true;
+}
+
 // 変数を名前で検索する。見つからなかった場合はNULLを返す。
 LVar *find_lvar(Token *tok) {
   for (LVar *var = locals; var; var = var->next) {
@@ -66,9 +78,16 @@ void program() {
   code[i] = NULL;
 }
 
-// 生成規則: stmt = expr ";"
+// 生成規則: stmt = expr ";" | "return" expr ";"
 Node *stmt() {
-  Node *node = expr();
+  Node *node;
+  if (consume_return("return")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_RETURN;
+    node->lhs = expr();
+  } else {
+    node = expr();
+  }
   expect(";");
   return node;
 }
@@ -235,6 +254,13 @@ void gen(Node *node) {
     printf("  pop rax\n");
     printf("  mov [rax], rdi\n");
     printf("  push rdi\n");
+    return;
+  case ND_RETURN:
+    gen(node->lhs);
+    printf("  pop rax\n");
+    printf("  mov rsp, rbp\n");
+    printf("  pop rbp\n");
+    printf("  ret\n");
     return;
   }
 

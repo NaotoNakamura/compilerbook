@@ -64,4 +64,7 @@ assert 6 "foo = 3; bar = 3; foo + bar;"
 assert 1 "a = b = 1;"
 assert 1 "a = 1; b = a;"
 
+assert 5 "return 5; return 8;"
+assert 8 "returnx; return 8;"
+
 echo OK
