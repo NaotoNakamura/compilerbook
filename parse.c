@@ -65,7 +65,7 @@ Token *tokenize(char *p) {
       continue;
     }
 
-    if (strncmp(p, "return", 6) == 0 && isspace(p[6])) {
+    if (startswith(p, "return") && isspace(p[6])) {
       cur = new_token(TK_RETURN, cur, p, 6);
       p += 6;
       continue;
