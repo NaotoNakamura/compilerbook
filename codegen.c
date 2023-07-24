@@ -252,6 +252,7 @@ void gen(Node *node) {
     return;
   }
 
+  // 以降の処理は2項演算子を処理する（rdiとraxの結果を計算）
   gen(node->lhs);
   gen(node->rhs);
 
