@@ -62,4 +62,7 @@ assert 6 "foo = 3; bar = 3; foo + bar;"
 assert 5 "return 5; return 8;"
 assert 8 "returnx; return 8;"
 
+assert 10 "if (1) 10;"
+assert 20 "a = 5; if (a == 5) 20;"
+
 echo OK

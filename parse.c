@@ -71,6 +71,12 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    if (startswith(p, "if") && isspace(p[2])) {
+      cur = new_token(TK_IF, cur, p, 2);
+      p += 2;
+      continue;
+    }
+
     if ('a' <= *p && *p <= 'z') {
       char *c = p;
       while ('a' <= *p && *p <= 'z') p++;

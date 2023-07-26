@@ -66,13 +66,28 @@ void program() {
   code[i] = NULL;
 }
 
-// 生成規則: stmt = expr ";" | "return" expr ";"
+// 生成規則: stmt = expr ";" 
+//               | "return" expr ";"
+//               | "if" "(" expr ")" stmt ("else" stmt)?
+//               | "while" "(" expr ")" stmt
+//               | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 Node *stmt() {
   Node *node;
   if (consume("return", TK_RETURN)) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
+  } else if (consume("if", TK_IF)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_IF;
+    expect("(");
+    // ()内の条件式をlhsに代入
+    node->lhs = expr();
+    expect(")");
+    // if内の処理をrhsに代入
+    node->rhs = stmt();
+    // stmtの後に「;」が来ることはないのでここでreturnする必要がある
+    return node;
   } else {
     node = expr();
   }
@@ -225,6 +240,14 @@ void gen_lval(Node *node) {
 
 void gen(Node *node) {
   switch (node->kind) {
+  case ND_IF:
+    gen(node->lhs);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je  .LendXXX\n");
+    gen(node->rhs);
+    printf(".LendXXX:\n");
+    return;
   case ND_NUM:
     printf("  push %d\n", node->val);
     return;
