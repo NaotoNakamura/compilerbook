@@ -53,6 +53,13 @@ bool startswith(char *p, char *q) {
   return memcmp(p, q, strlen(q)) == 0;
 }
 
+int is_alnum(char c) {
+  return ('a' <= c && c <= 'z') ||
+         ('A' <= c && c <= 'Z') ||
+         ('0' <= c && c <= '9') ||
+         (c == '_');
+}
+
 // 入力文字列pをトークナイズしてそれを返す
 Token *tokenize(char *p) {
   Token head;
@@ -65,13 +72,13 @@ Token *tokenize(char *p) {
       continue;
     }
 
-    if (startswith(p, "return") && isspace(p[6])) {
+    if (startswith(p, "return") && !is_alnum(p[6])) {
       cur = new_token(TK_RETURN, cur, p, 6);
       p += 6;
       continue;
     }
 
-    if (startswith(p, "if") && isspace(p[2])) {
+    if (startswith(p, "if") && !is_alnum(p[2])) {
       cur = new_token(TK_IF, cur, p, 2);
       p += 2;
       continue;

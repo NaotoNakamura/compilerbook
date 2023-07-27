@@ -59,10 +59,12 @@ assert 1 "a = b = 1;"
 assert 1 "a = 1; b = a;"
 assert 6 "foo = 3; bar = 3; foo + bar;"
 
+assert 10 "return(10);"
 assert 5 "return 5; return 8;"
 assert 8 "returnx; return 8;"
 
 assert 10 "if (1) 10;"
+assert 15 "if(1) 15;"
 assert 20 "a = 5; if (a == 5) 20;"
 
 echo OK
