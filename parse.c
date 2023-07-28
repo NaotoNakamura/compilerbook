@@ -70,6 +70,12 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    if (startswith(p, "while") && !is_alnum(p[5])) {
+      cur = new_token(TK_WHILE, cur, p, 5);
+      p += 5;
+      continue;
+    }
+
     if ('a' <= *p && *p <= 'z') {
       char *c = p;
       while ('a' <= *p && *p <= 'z') p++;

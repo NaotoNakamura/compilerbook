@@ -115,6 +115,14 @@ Node *stmt() {
     }
     // stmtの後に「;」が来ることはないのでここでreturnする必要がある
     return node;
+  } else if (consume("while", TK_WHILE)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_WHILE;
+    expect("(");
+    node->lhs = expr();
+    expect(")");
+    node->rhs = stmt();
+    return node;
   } else {
     node = expr();
   }
@@ -282,6 +290,16 @@ void gen(Node *node) {
     if (node->rhs->kind == ND_ELSE) {
       gen(node->rhs->rhs);
     }
+    printf(".LendXXX:\n");
+    return;
+  case ND_WHILE:
+    printf(".LbeginXXX:\n");
+    gen(node->lhs);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je  .LendXXX\n");
+    gen(node->rhs);
+    printf("  jmp  .LbeginXXX\n");
     printf(".LendXXX:\n");
     return;
   case ND_NUM:
