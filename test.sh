@@ -67,4 +67,8 @@ assert 10 "if (1) 10;"
 assert 15 "if(1) 15;"
 assert 20 "a = 5; if (a == 5) 20;"
 
+assert 20 "if (1 == 2) 10; else 20;"
+
+assert 21 "if (1 == 2) 10; else a = 21;"
+
 echo OK

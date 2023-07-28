@@ -86,6 +86,13 @@ Node *stmt() {
     expect(")");
     // if内の処理をrhsに代入
     node->rhs = stmt();
+    if (consume("else", TK_ELSE)) {
+      Node *els = calloc(1, sizeof(Node));
+      els->kind = ND_ELSE;
+      els->lhs = node->rhs;
+      els->rhs = stmt();
+      node->rhs = els;
+    }
     // stmtの後に「;」が来ることはないのでここでreturnする必要がある
     return node;
   } else {
@@ -244,8 +251,17 @@ void gen(Node *node) {
     gen(node->lhs);
     printf("  pop rax\n");
     printf("  cmp rax, 0\n");
-    printf("  je  .LendXXX\n");
-    gen(node->rhs);
+    printf("  je  .LelseXXX\n");
+    if (node->rhs->kind == ND_ELSE) {
+      gen(node->rhs->lhs);
+    } else {
+      gen(node->rhs);
+    }
+    printf("  jmp .LendXXX\n");
+    printf(".LelseXXX:\n");
+    if (node->rhs->kind == ND_ELSE) {
+      gen(node->rhs->rhs);
+    }
     printf(".LendXXX:\n");
     return;
   case ND_NUM:
