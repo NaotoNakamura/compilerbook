@@ -82,4 +82,10 @@ assert 3 "for (i = 1; i <= 2; i = i + 1) i;"
 
 assert 5 "if (1) if (1) 5;"
 
+assert 10 "{ 10; }"
+
+assert 20 "{ 10; 20; }"
+
+assert 5 "if (1) { 2; 5; }"
+
 echo OK

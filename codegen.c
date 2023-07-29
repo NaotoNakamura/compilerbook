@@ -86,7 +86,8 @@ void program() {
   code[i] = NULL;
 }
 
-// 生成規則: stmt = expr ";" 
+// 生成規則: stmt = expr ";"
+//               | "{" stmt* "}"
 //               | "return" expr ";"
 //               | "if" "(" expr ")" stmt ("else" stmt)?
 //               | "while" "(" expr ")" stmt
@@ -138,6 +139,14 @@ Node *stmt() {
     right->rhs = stmt();
     node->lhs = left;
     node->rhs = right;
+    return node;
+  } else if (consume("{", TK_RESERVED)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_BLOCK;
+    node->block = calloc(100, sizeof(Node));
+    for (int i = 0; !consume("}", TK_RESERVED); i++) {
+      node->block[i] = stmt();
+    }
     return node;
   } else {
     node = expr();
@@ -295,6 +304,11 @@ void gen(Node *node) {
   genCounter += 1;
   int id = genCounter;
   switch (node->kind) {
+  case ND_BLOCK:
+    for (int i = 0; node->block[i]; i++) {
+      gen(node->block[i]);
+    }
+    return;
   case ND_IF:
     gen(node->lhs);
     printf("  pop rax\n");
