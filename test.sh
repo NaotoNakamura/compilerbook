@@ -78,4 +78,6 @@ while (i <= 3)
  i;
 "
 
+assert 4 "for (i = 1; i <= 3; i = i + 1) i;"
+
 echo OK

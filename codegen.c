@@ -123,6 +123,22 @@ Node *stmt() {
     expect(")");
     node->rhs = stmt();
     return node;
+  } else if (consume("for", TK_FOR)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_FOR;
+    Node *left = calloc(1, sizeof(Node));
+    Node *right = calloc(1, sizeof(Node));
+    expect("(");
+    left->lhs = expr();
+    expect(";");
+    left->rhs = expr();
+    expect(";");
+    right->lhs = expr();
+    expect(")");
+    right->rhs = stmt();
+    node->lhs = left;
+    node->rhs = right;
+    return node;
   } else {
     node = expr();
   }
@@ -299,6 +315,18 @@ void gen(Node *node) {
     printf("  cmp rax, 0\n");
     printf("  je  .LendXXX\n");
     gen(node->rhs);
+    printf("  jmp  .LbeginXXX\n");
+    printf(".LendXXX:\n");
+    return;
+  case ND_FOR:
+    gen(node->lhs->lhs);
+    printf(".LbeginXXX:\n");
+    gen(node->lhs->rhs);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je  .LendXXX\n");
+    gen(node->rhs->rhs);
+    gen(node->rhs->lhs);
     printf("  jmp  .LbeginXXX\n");
     printf(".LendXXX:\n");
     return;
