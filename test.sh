@@ -78,6 +78,8 @@ while (i <= 3)
  i;
 "
 
-assert 4 "for (i = 1; i <= 3; i = i + 1) i;"
+assert 3 "for (i = 1; i <= 2; i = i + 1) i;"
+
+assert 5 "if (1) if (1) 5;"
 
 echo OK
